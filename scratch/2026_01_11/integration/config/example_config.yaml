@@ -1,0 +1,95 @@
+# scRNA-seq Integration Configuration
+# =====================================
+#
+# This config file controls the integration workflow.
+# Copy and modify for your specific analysis.
+
+# Input data
+input:
+  # For merge step: list of h5ad files to merge
+  files:
+    - path: "/path/to/dataset1.h5ad"
+      name: "sc_islet"
+    - path: "/path/to/dataset2.h5ad"
+      name: "primary_islet"
+
+  # For integration step: path to merged h5ad
+  h5ad_path: "./results/merged.h5ad"
+
+  # Column name for batch after merge
+  batch_key: "dataset"
+
+# Preprocessing parameters
+preprocessing:
+  n_top_genes: 3000          # Number of highly variable genes
+  regress_out: null          # Variables to regress out, e.g., ["total_counts", "pct_counts_mt"]
+  max_scale_value: 10        # Max value after scaling
+  n_pcs: 50                  # Number of principal components
+
+# Integration parameters
+integration:
+  # Key to use for batch correction (can differ from batch_key)
+  # e.g., use "sample_id" for sample-level correction
+  # or "donor_id" for donor-level correction
+  key: "sample_id"
+
+  # Harmony-specific settings (R/rpy2)
+  harmony:
+    theta: null              # Diversity clustering penalty (null = default)
+
+  # Seurat-specific settings (R/rpy2)
+  seurat:
+    methods:                 # Methods to compare
+      - "cca"                # Canonical Correlation Analysis
+      - "rpca"               # Reciprocal PCA
+      - "harmony"            # Harmony via Seurat
+      - "fastmnn"            # Fast Mutual Nearest Neighbors
+
+  # scVI-specific settings (Python)
+  scvi:
+    n_latent: 30             # Latent space dimensions
+    n_layers: 2              # Encoder/decoder layers
+    n_epochs: 400            # Max training epochs (null = auto)
+    early_stopping: true     # Use early stopping
+
+  # Scanorama-specific settings (Python)
+  scanorama:
+    knn: 20                  # K-nearest neighbors for matching
+
+# Clustering parameters
+clustering:
+  resolutions:               # Leiden resolutions to test
+    - 0.2
+    - 0.5
+    - 0.8
+    - 1.0
+  n_neighbors: 30            # Neighbors for graph construction
+
+# Output settings
+output:
+  dir: "./results/"          # Output directory
+  save_slim: true            # Save minimal h5ad (counts, obs, obsm only)
+  save_markers: true         # Compute and save marker genes
+  save_model: true           # Save scVI model for transfer learning
+
+# ==================================
+# Example Usage
+# ==================================
+#
+# 1. Merge datasets:
+#    python scripts/merge_datasets.py --config config/example_config.yaml
+#
+# 2. Run Harmony integration:
+#    python scripts/harmony_integration.py --config config/example_config.yaml
+#
+# 3. Run Seurat integration:
+#    python scripts/seurat_integration.py --config config/example_config.yaml
+#
+# 4. Run Python integration (scVI/Scanorama):
+#    python scripts/python_integration.py --config config/example_config.yaml
+#
+# Or use the notebooks interactively:
+#    - notebooks/01_merge_datasets.ipynb
+#    - notebooks/02_harmony_integration.ipynb
+#    - notebooks/03_seurat_integration.ipynb
+#    - notebooks/04_python_integration.ipynb
