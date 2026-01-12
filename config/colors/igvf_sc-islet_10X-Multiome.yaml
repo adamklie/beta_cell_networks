@@ -1,0 +1,32 @@
+cell_type_colors:
+  SC.alpha: "#967bb6"
+  SC.beta: "#2a9df4"
+  SC.EC: "#ff7f50"
+  SC.delta: "#dc143c"
+
+condition_colors:
+  control: "#B0B0B0"
+  3-cyt: "#7acce6"
+  IFNg: "#FF7F50"
+  Ex-4_HG: "#90EE90"
+  palmitate: "#BA55D3"
+  dex: "#ADD8E6"
+
+timepoint_colors:
+  "0": "#FFFFFF"
+  "6": "#FFEFE9"
+  "24": "#FFBFAA"
+  "48": "#FF7B5A"
+  "72": "#FF0000"
+
+batch_colors:
+  DM023: "#A6CEE3"
+  DM041: "#1F78B4"
+  JE002: "#B2DF8A"
+  DM060: "#33A02C"
+  #HZ021: "#FB9A99"
+
+cell_type_order: ["SC.alpha", "SC.beta", "SC.EC", "SC.delta"]
+condition_order: ["control", "3-cyt", "IFNg", "Ex-4_HG", "palmitate", "dex"]
+timepoint_order: ["0", "6", "24", "48", "72"]
+batch_order: ["DM023", "DM041", "JE002", "DM060", "HZ021"]
