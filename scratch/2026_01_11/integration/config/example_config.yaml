@@ -65,6 +65,27 @@ clustering:
     - 1.0
   n_neighbors: 30            # Neighbors for graph construction
 
+# Downsampling configuration (optional, for merge step)
+# The full merged dataset is ALWAYS saved as merged.h5ad
+# Downsampled versions are saved as additional files with descriptive names
+downsampling:
+  seed: 42                   # Random seed for reproducibility
+
+  # Random downsampling - simple random sampling to target cell counts
+  # Supports single value (50000) or list ([10000, 25000, 50000])
+  # Each value creates: merged_random_{n}.h5ad
+  random:
+    n_cells: []              # e.g., [10000, 25000, 50000] or 50000
+
+  # Cell type aware downsampling - match cell types across datasets
+  # Keeps only shared cell types (unless keep_unshared: true)
+  # Each value creates: merged_celltype_{n}pertype.h5ad
+  celltype_aware:
+    celltype_column: "cell_type"  # Column containing cell type annotations
+    n_cells_per_type: []          # e.g., [500, 1000] or 1000
+    keep_unshared: false          # If true, keep cell types not in all datasets
+    min_cells_per_type: 10        # Min cells required to keep a cell type
+
 # Output settings
 output:
   dir: "./results/"          # Output directory
@@ -76,16 +97,26 @@ output:
 # Example Usage
 # ==================================
 #
-# 1. Merge datasets:
+# 1. Merge datasets (full + optional downsampled versions):
 #    python scripts/merge_datasets.py --config config/example_config.yaml
+#
+#    # Or with CLI overrides for downsampling:
+#    python scripts/merge_datasets.py --config config/example_config.yaml \
+#        --downsample-random 10000 25000 50000 \
+#        --downsample-celltype 500 1000
 #
 # 2. Run Harmony integration:
 #    python scripts/harmony_integration.py --config config/example_config.yaml
 #
-# 3. Run Seurat integration:
+# 3. Run Seurat integration (Python wrapper):
 #    python scripts/seurat_integration.py --config config/example_config.yaml
 #
-# 4. Run Python integration (scVI/Scanorama):
+# 4. Run Seurat integration (pure R, for HPC/SLURM):
+#    Rscript scripts/seurat_integration.R --config config/example_config.yaml
+#    # Or via SLURM:
+#    sbatch scripts/submit_seurat_integration.sh --config config/example_config.yaml
+#
+# 5. Run Python integration (scVI/Scanorama):
 #    python scripts/python_integration.py --config config/example_config.yaml
 #
 # Or use the notebooks interactively:
@@ -93,3 +124,4 @@ output:
 #    - notebooks/02_harmony_integration.ipynb
 #    - notebooks/03_seurat_integration.ipynb
 #    - notebooks/04_python_integration.ipynb
+#    - notebooks/04_seurat_integrationR.ipynb (pure R)

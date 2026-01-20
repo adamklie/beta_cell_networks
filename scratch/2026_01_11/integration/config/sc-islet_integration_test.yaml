@@ -1,0 +1,91 @@
+# sc-islet Integration Test Configuration
+# =========================================
+#
+# Test configuration for integration pipeline using downsampled data.
+# This creates a smaller dataset for rapid iteration and testing.
+
+# Input data
+input:
+  # For merge step: list of h5ad files to merge
+  files:
+    - path: "/cellar/users/aklie/data/datasets/igvf_sc-islet_10X-Multiome/results/4_integration/2025_11_30/rna/integrate/round_1/annotation/annotated.h5ad"
+      name: "igvf_sc-islet_10X-Multiome"
+    - path: "/cellar/users/aklie/data/datasets/Augsornworawat2023_sc-islet_10X-Multiome/results/4_cell_annotation/rna/integrate/round_1/annotation/annotated.h5ad"
+      name: "Augsornworawat2023_sc-islet_10X-Multiome"
+
+  # For integration step: path to merged/downsampled h5ad
+  # Use the downsampled file for testing
+  h5ad_path: "/cellar/users/aklie/projects/igvf/beta_cell_networks/scratch/2026_01_11/integration/results/test/merged_celltype_500pertype.h5ad"
+
+  # Column name for batch after merge
+  batch_key: "dataset"
+
+# Downsampling configuration (optional)
+# The full merged dataset is ALWAYS saved as merged.h5ad
+# Downsampled versions are saved as additional files with descriptive names
+# e.g., merged_random_50000.h5ad, merged_celltype_1000pertype.h5ad
+downsampling:
+  seed: 42
+
+  # Random downsampling - list of target cell counts
+  # Each value creates a separate output file
+  random:
+    n_cells: []  # Empty for test - using celltype_aware instead
+
+  # Cell type aware downsampling - match cell types across datasets
+  celltype_aware:
+    celltype_column: "cell_type"
+    n_cells_per_type: [500]   # ~5000 cells total with ~10 shared cell types
+    keep_unshared: false
+    min_cells_per_type: 10
+
+# Preprocessing parameters
+preprocessing:
+  n_top_genes: 3000          # Number of highly variable genes
+  regress_out: null          # Variables to regress out
+  max_scale_value: 10        # Max value after scaling
+  n_pcs: 50                  # Number of principal components
+
+# Integration parameters
+integration:
+  # Key to use for batch correction
+  key: "dataset"
+
+  # Harmony settings
+  harmony:
+    theta: null
+
+  # Seurat settings
+  seurat:
+    methods:
+      - "cca"
+      - "rpca"
+      - "harmony"
+      - "fastmnn"
+
+  # scVI settings
+  scvi:
+    n_latent: 30
+    n_layers: 2
+    n_epochs: 400
+    early_stopping: true
+
+  # Scanorama settings
+  scanorama:
+    knn: 20
+
+# Clustering parameters
+clustering:
+  resolutions:
+    - 0.2
+    - 0.5
+    - 0.8
+    - 1.0
+  n_neighbors: 30
+
+# Output settings
+output:
+  dir: "/cellar/users/aklie/projects/igvf/beta_cell_networks/scratch/2026_01_11/integration/results/test"
+  save_slim: true
+  save_markers: true
+  save_model: true
