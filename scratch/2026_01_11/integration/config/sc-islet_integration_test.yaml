@@ -51,6 +51,11 @@ integration:
   # Key to use for batch correction
   key: "dataset"
 
+  # Additional variables to plot in comparison figures (besides integration key)
+  # These will be checked for existence in the data before plotting
+  plot_vars:
+    - "cell_type"
+
   # Harmony settings
   harmony:
     theta: null

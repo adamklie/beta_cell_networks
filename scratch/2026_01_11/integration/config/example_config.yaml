@@ -33,6 +33,14 @@ integration:
   # or "donor_id" for donor-level correction
   key: "sample_id"
 
+  # Additional variables to plot in method comparison figures
+  # The integration key is always plotted; these are extras
+  # Will be skipped if not present in the data
+  plot_vars:
+    - "cell_type"            # Cell type annotations
+    # - "donor_id"           # Donor/patient ID
+    # - "condition"          # Experimental condition
+
   # Harmony-specific settings (R/rpy2)
   harmony:
     theta: null              # Diversity clustering penalty (null = default)

@@ -16,8 +16,8 @@ python scripts/merge_datasets.py --config config/sc-islet_integration_test.yaml
 Rscript scripts/seurat_integration.R \
     --input results/test/merged_celltype_500pertype.h5ad \
     --output results/test/seurat \
-    --batch-key dataset \
     --integration-key dataset \
+    --plot-vars cell_type \
     --methods cca,rpca,harmony,fastmnn \
     --resolutions 0.2,0.5,0.8
 ```
@@ -95,7 +95,8 @@ Rscript scripts/seurat_integration.R \
 Rscript scripts/seurat_integration.R \
     --input results/test/merged_celltype_500pertype.h5ad \
     --output results/test/seurat \
-    --batch-key dataset \
+    --integration-key dataset \
+    --plot-vars cell_type,sample \
     --methods cca,rpca,harmony,fastmnn \
     --resolutions 0.2,0.5,0.8,1.0 \
     --n-hvgs 3000 \
@@ -174,6 +175,8 @@ preprocessing:
 
 integration:
   key: "dataset"           # Column for batch correction
+  plot_vars:               # Additional variables to plot
+    - "cell_type"
   seurat:
     methods: [cca, rpca, harmony, fastmnn]
 

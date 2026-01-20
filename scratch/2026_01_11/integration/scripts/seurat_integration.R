@@ -41,10 +41,10 @@ option_list <- list(
               help = "Input h5ad file path"),
   make_option(c("-o", "--output"), type = "character", default = NULL,
               help = "Output directory"),
-  make_option(c("--batch-key"), type = "character", default = NULL,
-              help = "Metadata column for batch (visualization)"),
   make_option(c("--integration-key"), type = "character", default = NULL,
-              help = "Metadata column for integration (defaults to batch-key)"),
+              help = "Metadata column for batch integration [default: dataset]"),
+  make_option(c("--plot-vars"), type = "character", default = NULL,
+              help = "Comma-separated additional variables to plot (e.g., cell_type,sample)"),
   make_option(c("--n-hvgs"), type = "integer", default = NULL,
               help = "Number of highly variable genes"),
   make_option(c("--n-pcs"), type = "integer", default = NULL,
@@ -77,8 +77,8 @@ load_config <- function(config_path) {
 defaults <- list(
   input_path = NULL,
   output_dir = "./results/seurat/",
-  batch_key = "dataset",
-  integration_key = NULL,  # will default to batch_key
+  integration_key = "dataset",
+  plot_vars = c(),  # additional variables to plot
   n_hvgs = 3000,
   n_pcs = 50,
   n_dims = 30,
@@ -95,8 +95,8 @@ if (!is.null(opt$config)) {
 
   defaults$input_path <- config$input$h5ad_path
   defaults$output_dir <- file.path(config$output$dir, "seurat")
-  defaults$batch_key <- config$input$batch_key
   defaults$integration_key <- config$integration$key
+  defaults$plot_vars <- config$integration$plot_vars %||% c()
   defaults$n_hvgs <- config$preprocessing$n_top_genes
   defaults$n_pcs <- config$preprocessing$n_pcs
   defaults$n_dims <- config$clustering$n_neighbors  # use same as neighbors
@@ -107,8 +107,7 @@ if (!is.null(opt$config)) {
 # Override with command line arguments
 INPUT_PATH <- opt$input %||% defaults$input_path
 OUTPUT_DIR <- opt$output %||% defaults$output_dir
-BATCH_KEY <- opt$`batch-key` %||% defaults$batch_key
-INTEGRATION_KEY <- opt$`integration-key` %||% defaults$integration_key %||% BATCH_KEY
+INTEGRATION_KEY <- opt$`integration-key` %||% defaults$integration_key
 N_HVGS <- opt$`n-hvgs` %||% defaults$n_hvgs
 N_PCS <- opt$`n-pcs` %||% defaults$n_pcs
 N_DIMS <- opt$`n-dims` %||% defaults$n_dims
@@ -129,6 +128,15 @@ if (!is.null(opt$methods)) {
 } else {
   METHODS_TO_RUN <- defaults$methods
 }
+
+# Parse plot_vars (additional variables to plot besides integration_key)
+if (!is.null(opt$`plot-vars`)) {
+  PLOT_VARS <- strsplit(opt$`plot-vars`, ",")[[1]]
+} else {
+  PLOT_VARS <- defaults$plot_vars
+}
+# Always include integration_key in plot vars
+ALL_PLOT_VARS <- unique(c(INTEGRATION_KEY, PLOT_VARS))
 
 # Validate required inputs
 if (is.null(INPUT_PATH)) {
@@ -181,8 +189,8 @@ log_msg("Seurat Integration Pipeline")
 log_msg("=" %>% rep(70) %>% paste(collapse = ""))
 log_msg("Input: ", INPUT_PATH)
 log_msg("Output: ", OUTPUT_DIR)
-log_msg("Batch key: ", BATCH_KEY)
 log_msg("Integration key: ", INTEGRATION_KEY)
+log_msg("Plot variables: ", paste(ALL_PLOT_VARS, collapse = ", "))
 log_msg("Methods: ", paste(METHODS_TO_RUN, collapse = ", "))
 log_msg("HVGs: ", N_HVGS, " | PCs: ", N_PCS, " | Dims: ", N_DIMS)
 log_msg("Resolutions: ", paste(CLUSTER_RESOLUTIONS, collapse = ", "))
@@ -255,12 +263,14 @@ if (step_idx <= 2) {
   seurat_obj <- RunUMAP(seurat_obj, reduction = "pca", dims = 1:N_DIMS,
                         reduction.name = "umap_uncorrected", verbose = FALSE)
 
-  # Plot uncorrected
-  p1 <- DimPlot(seurat_obj, reduction = "umap_uncorrected", group.by = INTEGRATION_KEY,
-                pt.size = 0.1) + ggtitle(paste("Uncorrected -", INTEGRATION_KEY))
-  p2 <- DimPlot(seurat_obj, reduction = "umap_uncorrected", group.by = BATCH_KEY,
-                pt.size = 0.1) + ggtitle(paste("Uncorrected -", BATCH_KEY))
-  save_figure(p1 + p2, "umap_uncorrected", OUTPUT_DIR, width = 14, height = 6)
+  # Plot uncorrected for each plot variable
+  for (plot_var in ALL_PLOT_VARS) {
+    if (plot_var %in% colnames(seurat_obj@meta.data)) {
+      p <- DimPlot(seurat_obj, reduction = "umap_uncorrected", group.by = plot_var,
+                   pt.size = 0.1) + ggtitle(paste("Uncorrected -", plot_var))
+      save_figure(p, paste0("umap_uncorrected_", plot_var), OUTPUT_DIR, width = 10, height = 8)
+    }
+  }
 
   # Save checkpoint after preprocessing
   save_checkpoint(seurat_obj, "02_preprocessed", OUTPUT_DIR)
@@ -402,25 +412,26 @@ if (step_idx <= 4) {
     available_umaps <- c(available_umaps, "umap_mnn"); umap_labels <- c(umap_labels, "FastMNN")
   }
 
-  # Comparison by batch
-  plots_batch <- lapply(seq_along(available_umaps), function(i) {
-    DimPlot(seurat_obj, reduction = available_umaps[i], group.by = INTEGRATION_KEY,
-            pt.size = 0.1) +
-      ggtitle(umap_labels[i]) +
-      theme(legend.position = "none")
-  })
-  comparison_batch <- wrap_plots(plots_batch, ncol = 3)
-  save_figure(comparison_batch, "method_comparison_batch", OUTPUT_DIR, width = 16, height = 12)
+  # Create comparison plots for each plot variable
+  for (plot_var in ALL_PLOT_VARS) {
+    if (plot_var %in% colnames(seurat_obj@meta.data)) {
+      log_msg("  Creating comparison plots for: ", plot_var)
 
-  # Comparison by dataset
-  plots_dataset <- lapply(seq_along(available_umaps), function(i) {
-    DimPlot(seurat_obj, reduction = available_umaps[i], group.by = BATCH_KEY,
-            pt.size = 0.1) +
-      ggtitle(umap_labels[i]) +
-      theme(legend.position = "none")
-  })
-  comparison_dataset <- wrap_plots(plots_dataset, ncol = 3)
-  save_figure(comparison_dataset, "method_comparison_dataset", OUTPUT_DIR, width = 16, height = 12)
+      plots_var <- lapply(seq_along(available_umaps), function(i) {
+        DimPlot(seurat_obj, reduction = available_umaps[i], group.by = plot_var,
+                pt.size = 0.1) +
+          ggtitle(umap_labels[i]) +
+          theme(legend.position = "none")
+      })
+      comparison_var <- wrap_plots(plots_var, ncol = 3)
+
+      # Clean variable name for filename
+      var_clean <- gsub("[^a-zA-Z0-9_]", "_", plot_var)
+      save_figure(comparison_var, paste0("method_comparison_", var_clean), OUTPUT_DIR, width = 16, height = 12)
+    } else {
+      log_msg("  Warning: plot variable '", plot_var, "' not found in metadata, skipping")
+    }
+  }
 
   log_msg("UMAPs complete")
 }

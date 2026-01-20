@@ -34,8 +34,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG=""
 INPUT=""
 OUTPUT=""
-BATCH_KEY=""
 INTEGRATION_KEY=""
+PLOT_VARS=""
 N_HVGS=""
 N_PCS=""
 N_DIMS=""
@@ -60,12 +60,12 @@ while [[ $# -gt 0 ]]; do
       OUTPUT="$2"
       shift 2
       ;;
-    --batch-key)
-      BATCH_KEY="$2"
-      shift 2
-      ;;
     --integration-key)
       INTEGRATION_KEY="$2"
+      shift 2
+      ;;
+    --plot-vars)
+      PLOT_VARS="$2"
       shift 2
       ;;
     --n-hvgs)
@@ -137,8 +137,8 @@ CMD="Rscript ${SCRIPT_DIR}/seurat_integration.R"
 [[ -n "${CONFIG}" ]] && CMD="${CMD} --config ${CONFIG}"
 [[ -n "${INPUT}" ]] && CMD="${CMD} --input ${INPUT}"
 [[ -n "${OUTPUT}" ]] && CMD="${CMD} --output ${OUTPUT}"
-[[ -n "${BATCH_KEY}" ]] && CMD="${CMD} --batch-key ${BATCH_KEY}"
 [[ -n "${INTEGRATION_KEY}" ]] && CMD="${CMD} --integration-key ${INTEGRATION_KEY}"
+[[ -n "${PLOT_VARS}" ]] && CMD="${CMD} --plot-vars ${PLOT_VARS}"
 [[ -n "${N_HVGS}" ]] && CMD="${CMD} --n-hvgs ${N_HVGS}"
 [[ -n "${N_PCS}" ]] && CMD="${CMD} --n-pcs ${N_PCS}"
 [[ -n "${N_DIMS}" ]] && CMD="${CMD} --n-dims ${N_DIMS}"
