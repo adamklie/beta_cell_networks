@@ -1,0 +1,24 @@
+cell_type_colors:
+  SC.alpha: "#967bb6"
+  SC.beta: "#2a9df4"
+  SC.EC: "#ff7f50"
+  SC.delta: "#dc143c"
+  Augsornworawat2023_SC.EC.2: "#cd90c1"   # EC2 pink from figure
+  exocrine: "#56851f"                    # green from figure
+  mesenchymal: "#69030f"                 # dark burgundy from figure
+  proliferating: "#9ce29d"
+  stressed-endocrine: "#a7a7a7"
+  progenitor: "#7f7f7f"
+
+cell_type_order:
+  - SC.alpha
+  - SC.beta
+  - SC.delta
+  - SC.EC
+  - Augsornworawat2023_SC.EC.2
+  - proliferating
+  - stressed-endocrine
+  - progenitor
+  - exocrine
+  - mesenchymal
+  - SC.SC.beta

@@ -3,6 +3,9 @@ cell_type_colors:
   SC.beta: "#2a9df4"
   SC.EC: "#ff7f50"
   SC.delta: "#dc143c"
+  proliferating: "#9ce29d"
+  stressed-endocrine: "#a7a7a7"
+  progenitor: "#7f7f7f"
 
 condition_colors:
   control: "#B0B0B0"
@@ -26,7 +29,7 @@ batch_colors:
   DM060: "#33A02C"
   #HZ021: "#FB9A99"
 
-cell_type_order: ["SC.alpha", "SC.beta", "SC.EC", "SC.delta"]
+cell_type_order: ["SC.alpha", "SC.beta", "SC.EC", "SC.delta", "proliferating", "stressed-endocrine", "progenitor"]
 condition_order: ["control", "3-cyt", "IFNg", "Ex-4_HG", "palmitate", "dex"]
 timepoint_order: ["0", "6", "24", "48", "72"]
 batch_order: ["DM023", "DM041", "JE002", "DM060", "HZ021"]
